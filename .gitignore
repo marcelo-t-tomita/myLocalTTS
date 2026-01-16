@@ -1,0 +1,48 @@
+# Rust build artifacts
+/target/
+# Note: Cargo.lock is committed for reproducible builds (this is an application, not a library)
+
+# Model files (too large for git)
+*.bin
+
+# Rust installer (not needed in repo)
+rustup-init.exe
+
+# Whisper downloads and extracted folders (users must download their own)
+whisper-bin*/
+whisper-cublas*/
+whisper-bin*.zip
+whisper-cublas*.zip
+whisper-cuda*.zip
+*.zip
+
+# Whisper executables and DLLs (users must download their own)
+whisper-cli.exe
+whisper.exe
+main.exe
+
+# Whisper DLLs (CUDA, cuBLAS, ggml, etc.)
+*.dll
+ggml*.dll
+cublas*.dll
+cudart*.dll
+cublasLt*.dll
+whisper.dll
+
+# Temporary files
+temp_input.wav
+temp_input.txt
+temp_*.wav
+temp_*.txt
+*.wav.txt
+*.tmp
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
