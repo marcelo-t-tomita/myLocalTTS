@@ -1,28 +1,28 @@
-# LocalTTS
+# myLocalTTS
 
 A lightweight, offline speech-to-text tool for Windows that runs locally using [Whisper.cpp](https://github.com/ggerganov/whisper.cpp). Press a hotkey to record your voice, release to transcribe, and the text is automatically pasted into your active application.
 
 ## Features
 
-- **Fully Offline** - No internet connection required, all processing happens locally
-- **GPU Accelerated** - Supports CUDA for fast transcription on NVIDIA GPUs
-- **Auto Language Detection** - Automatically detects the spoken language
-- **Simple Hotkey** - Hold F9 to record, release to transcribe and paste
-- **Microphone Selection** - Choose your preferred input device at startup
-- **Low Latency** - Text appears almost instantly after releasing the hotkey
+-   **Fully Offline** - No internet connection required, all processing happens locally
+-   **GPU Accelerated** - Supports CUDA for fast transcription on NVIDIA GPUs
+-   **Auto Language Detection** - Automatically detects the spoken language
+-   **Simple Hotkey** - Hold F9 to record, release to transcribe and paste
+-   **Microphone Selection** - Choose your preferred input device at startup
+-   **Low Latency** - Text appears almost instantly after releasing the hotkey
 
 ## Requirements
 
-- Windows 10/11
-- [Whisper.cpp](https://github.com/ggerganov/whisper.cpp/releases) executable (`whisper-cli.exe`)
-- A Whisper model file (e.g., `ggml-large-v3-turbo.bin`)
-- For GPU acceleration: NVIDIA GPU with CUDA support
+-   Windows 10/11
+-   [Whisper.cpp](https://github.com/ggerganov/whisper.cpp/releases) executable (`whisper-cli.exe`)
+-   A Whisper model file (e.g., `ggml-large-v3-turbo.bin`)
+-   For GPU acceleration: NVIDIA GPU with CUDA support
 
 ## Installation
 
 ### 1. Download the release
 
-Download the latest release from the [Releases](https://github.com/yourusername/localTTS/releases) page.
+Download the latest release from the [Releases](https://github.com/marcelo-t-tomita/myLocalTTS/releases) page.
 
 ### 2. Download Whisper.cpp
 
@@ -30,16 +30,19 @@ Download the latest release from the [Releases](https://github.com/yourusername/
 
 1. Go to [whisper.cpp releases](https://github.com/ggerganov/whisper.cpp/releases)
 2. Download the appropriate version:
-   - **CPU only**: `whisper-bin-x64.zip`
-   - **NVIDIA GPU (recommended)**: `whisper-cublas-12.4.0-bin-x64.zip`
 
-   > **Tip:** The `whisper-cublas-12.4.0-bin-x64.zip` version has been tested and works best for CUDA GPU acceleration.
+    - **CPU only**: `whisper-bin-x64.zip`
+    - **NVIDIA GPU (recommended)**: `whisper-cublas-12.4.0-bin-x64.zip`
+
+    > **Tip:** The `whisper-cublas-12.4.0-bin-x64.zip` version has been tested and works best for CUDA GPU acceleration.
+
 3. Extract the ZIP file
-4. Copy the following files to your LocalTTS folder:
-   - `whisper-cli.exe` (required)
-   - **All `.dll` files** (required - these include ggml, CUDA, and other dependencies)
+4. Copy the following files to your myLocalTTS folder:
+    - `whisper-cli.exe` (required)
+    - **All `.dll` files** (required - these include ggml, CUDA, and other dependencies)
 
 Example DLLs you should see (varies by version):
+
 ```
 ggml.dll
 whisper.dll
@@ -54,13 +57,13 @@ cudart64_*.dll      (CUDA version only)
 
 Download a model from [Hugging Face](https://huggingface.co/ggerganov/whisper.cpp/tree/main):
 
-| Model | Size | Quality | Speed |
-|-------|------|---------|-------|
-| `ggml-tiny.bin` | ~75 MB | Basic | Fastest |
-| `ggml-base.bin` | ~147 MB | Good | Fast |
-| `ggml-small.bin` | ~466 MB | Better | Medium |
-| `ggml-medium.bin` | ~1.5 GB | Great | Slower |
-| `ggml-large-v3-turbo.bin` | ~1.6 GB | Best | Fast (GPU) |
+| Model                     | Size    | Quality | Speed      |
+| ------------------------- | ------- | ------- | ---------- |
+| `ggml-tiny.bin`           | ~75 MB  | Basic   | Fastest    |
+| `ggml-base.bin`           | ~147 MB | Good    | Fast       |
+| `ggml-small.bin`          | ~466 MB | Better  | Medium     |
+| `ggml-medium.bin`         | ~1.5 GB | Great   | Slower     |
+| `ggml-large-v3-turbo.bin` | ~1.6 GB | Best    | Fast (GPU) |
 
 For best results with a GPU, use `ggml-large-v3-turbo.bin`:
 
@@ -73,7 +76,7 @@ Invoke-WebRequest -Uri "https://huggingface.co/ggerganov/whisper.cpp/resolve/mai
 Your folder should look like this:
 
 ```
-localTTS/
+myLocalTTS/
 ├── local_tts_tool.exe
 ├── whisper-cli.exe
 ├── ggml-large-v3-turbo.bin
@@ -94,14 +97,14 @@ The transcribed text will be automatically pasted into whatever application is c
 
 ### Prerequisites
 
-- [Rust](https://rustup.rs/) (latest stable)
-- Windows 10/11
+-   [Rust](https://rustup.rs/) (latest stable)
+-   Windows 10/11
 
 ### Build
 
 ```bash
-git clone https://github.com/yourusername/localTTS.git
-cd localTTS
+git clone https://github.com/marcelo-t-tomita/myLocalTTS.git
+cd myLocalTTS
 cargo build --release
 ```
 
@@ -142,7 +145,7 @@ Add this to your PowerShell profile (`notepad $PROFILE`):
 
 ```powershell
 function tts {
-    Push-Location 'C:\path\to\localTTS'
+    Push-Location 'C:\path\to\myLocalTTS'
     .\local_tts_tool.exe
     Pop-Location
 }
@@ -153,21 +156,26 @@ Then just type `tts` to start the tool.
 ## Troubleshooting
 
 ### "Model file not found"
+
 Make sure the model file (e.g., `ggml-large-v3-turbo.bin`) is in the same folder as the executable.
 
 ### "Whisper executable not found"
+
 Make sure `whisper-cli.exe` is in the same folder as the executable.
 
 ### "DLL not found" error
+
 Copy all `.dll` files from the whisper.cpp release to the same folder as the executable.
 
 ### Transcription is slow
-- Use the CUDA version of whisper.cpp for GPU acceleration
-- Use a smaller model (e.g., `ggml-small.bin`)
+
+-   Use the CUDA version of whisper.cpp for GPU acceleration
+-   Use a smaller model (e.g., `ggml-small.bin`)
 
 ### F9 key not working
-- Make sure no other application is using F9 as a global hotkey
-- Try running from a different terminal window
+
+-   Make sure no other application is using F9 as a global hotkey
+-   Try running from a different terminal window
 
 ## License
 
@@ -175,5 +183,5 @@ MIT License - see [LICENSE](LICENSE) for details.
 
 ## Acknowledgments
 
-- [whisper.cpp](https://github.com/ggerganov/whisper.cpp) - High-performance C/C++ implementation of OpenAI's Whisper
-- [OpenAI Whisper](https://github.com/openai/whisper) - Original speech recognition model
+-   [whisper.cpp](https://github.com/ggerganov/whisper.cpp) - High-performance C/C++ implementation of OpenAI's Whisper
+-   [OpenAI Whisper](https://github.com/openai/whisper) - Original speech recognition model
