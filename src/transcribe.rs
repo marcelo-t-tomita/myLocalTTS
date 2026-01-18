@@ -1,7 +1,7 @@
 use anyhow::{anyhow, Result};
-use std::process::Command;
-use std::path::PathBuf;
 use std::env;
+use std::path::PathBuf;
+use std::process::Command;
 
 pub struct Transcriber {
     executable_path: PathBuf,
@@ -45,9 +45,12 @@ impl Transcriber {
             .arg(&self.model_path)
             .arg("-f")
             .arg(&audio_path)
-            // Auto-detect language (remove -l flag to let Whisper detect)
             .arg("--output-txt")
             .arg("-nt") // No timestamps in output
+            .arg("-l")
+            .arg("auto") // Auto-detect language
+            .arg("--prompt")
+            .arg("Multilingual transcription. Transcrição multilíngue. English and Portuguese text. Texto em inglês e português.")
             .output()
             .map_err(|e| anyhow!("Failed to execute whisper process: {}", e))?;
 
@@ -56,7 +59,10 @@ impl Transcriber {
             let stdout = String::from_utf8_lossy(&output.stdout);
             eprintln!("Whisper stdout: {}", stdout);
             eprintln!("Whisper stderr: {}", stderr);
-            return Err(anyhow!("Whisper process execution failed (exit code: {:?})", output.status.code()));
+            return Err(anyhow!(
+                "Whisper process execution failed (exit code: {:?})",
+                output.status.code()
+            ));
         }
 
         let raw_output = String::from_utf8_lossy(&output.stdout).to_string();
