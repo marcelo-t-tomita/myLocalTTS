@@ -44,9 +44,6 @@ impl AudioRecorder {
         self.device = Some(device);
     }
 
-    pub fn sample_rate(&self) -> u32 {
-        self.sample_rate
-    }
 
     pub fn start(&mut self) -> Result<()> {
         // Stop any existing stream first
