@@ -1,0 +1,5 @@
+# Piper TTS Configuration
+PIPER_PATH=piper\piper.exe
+PIPER_MODEL=piper\piper-model.onnx
+# Narration config --length-scale: <1.0 = faster, >1.0 = slower (default 1.0)
+SPEED=0.8
