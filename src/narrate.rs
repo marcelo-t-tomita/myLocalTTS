@@ -1,26 +1,35 @@
 use anyhow::{anyhow, Result};
+use std::collections::HashMap;
 use std::env;
 use std::path::PathBuf;
 use std::process::{Child, Command, Stdio};
 use std::sync::{Arc, Mutex};
+use whatlang::{detect, Lang};
 
 /// Configuration for Piper TTS
 pub struct NarratorConfig {
     pub piper_path: PathBuf,
-    pub model_path: PathBuf,
+    pub models: HashMap<String, PathBuf>, // language code -> model path
+    pub default_model: PathBuf,
     pub speed: f32,
 }
 
 impl NarratorConfig {
     /// Load TTS configuration from environment variables or config file
     /// Priority: Environment variables > config file > defaults
+    ///
+    /// Supports language-specific models with PIPER_MODEL_XX format:
+    /// - PIPER_MODEL_EN for English
+    /// - PIPER_MODEL_PT for Portuguese
+    /// - PIPER_MODEL (or PIPER_MODEL_DEFAULT) as fallback
     pub fn load() -> Result<Self> {
         let current_dir = env::current_dir()?;
 
         // Try to load from config file first
         let config_path = current_dir.join("tts_config.txt");
         let mut piper_path: Option<PathBuf> = None;
-        let mut model_path: Option<PathBuf> = None;
+        let mut models: HashMap<String, PathBuf> = HashMap::new();
+        let mut default_model: Option<PathBuf> = None;
         let mut speed: f32 = 1.0;
 
         if config_path.exists() {
@@ -33,11 +42,19 @@ impl NarratorConfig {
                 if let Some((key, value)) = line.split_once('=') {
                     let key = key.trim();
                     let value = value.trim();
-                    match key {
-                        "PIPER_PATH" => piper_path = Some(PathBuf::from(value)),
-                        "PIPER_MODEL" => model_path = Some(PathBuf::from(value)),
-                        "SPEED" => speed = value.parse().unwrap_or(1.0),
-                        _ => {}
+
+                    if key == "PIPER_PATH" {
+                        piper_path = Some(PathBuf::from(value));
+                    } else if key == "PIPER_MODEL" || key == "PIPER_MODEL_DEFAULT" {
+                        default_model = Some(PathBuf::from(value));
+                    } else if key.starts_with("PIPER_MODEL_") {
+                        // Extract language code (e.g., "EN" from "PIPER_MODEL_EN")
+                        let lang_code = key.strip_prefix("PIPER_MODEL_").unwrap().to_lowercase();
+                        if lang_code != "default" {
+                            models.insert(lang_code, PathBuf::from(value));
+                        }
+                    } else if key == "SPEED" {
+                        speed = value.parse().unwrap_or(1.0);
                     }
                 }
             }
@@ -48,14 +65,14 @@ impl NarratorConfig {
             piper_path = Some(PathBuf::from(path));
         }
         if let Ok(path) = env::var("PIPER_MODEL") {
-            model_path = Some(PathBuf::from(path));
+            default_model = Some(PathBuf::from(path));
         }
 
         // Default paths if not configured
         let piper_path = piper_path.unwrap_or_else(|| current_dir.join("piper.exe"));
-        let model_path = model_path.unwrap_or_else(|| current_dir.join("piper-model.onnx"));
+        let default_model = default_model.unwrap_or_else(|| current_dir.join("piper-model.onnx"));
 
-        // Validate paths
+        // Validate piper executable
         if !piper_path.exists() {
             return Err(anyhow!(
                 "Piper executable not found at '{}'. Please download Piper from https://github.com/OHF-Voice/piper1-gpl/releases and set PIPER_PATH environment variable or add PIPER_PATH to tts_config.txt",
@@ -63,18 +80,93 @@ impl NarratorConfig {
             ));
         }
 
-        if !model_path.exists() {
+        // Validate default model
+        if !default_model.exists() {
             return Err(anyhow!(
                 "Piper model not found at '{}'. Please download a model from https://huggingface.co/rhasspy/piper-voices and set PIPER_MODEL environment variable or add PIPER_MODEL to tts_config.txt",
-                model_path.display()
+                default_model.display()
             ));
+        }
+
+        // Validate language-specific models and remove invalid ones
+        models.retain(|lang, path| {
+            if path.exists() {
+                true
+            } else {
+                eprintln!(
+                    "WARNING: Piper model for '{}' not found at '{}', will use default",
+                    lang,
+                    path.display()
+                );
+                false
+            }
+        });
+
+        // Log detected models
+        if !models.is_empty() {
+            println!("Language-specific TTS models loaded:");
+            for (lang, path) in &models {
+                println!("  {} -> {}", lang.to_uppercase(), path.display());
+            }
+            println!("  DEFAULT -> {}", default_model.display());
         }
 
         Ok(Self {
             piper_path,
-            model_path,
+            models,
+            default_model,
             speed,
         })
+    }
+
+    /// Get the appropriate model path for the given text
+    pub fn get_model_for_text(&self, text: &str) -> &PathBuf {
+        if let Some(info) = detect(text) {
+            let lang_code = match info.lang() {
+                Lang::Eng => "en",
+                Lang::Por => "pt",
+                Lang::Spa => "es",
+                Lang::Fra => "fr",
+                Lang::Deu => "de",
+                Lang::Ita => "it",
+                Lang::Nld => "nl",
+                Lang::Rus => "ru",
+                Lang::Jpn => "ja",
+                Lang::Cmn => "zh",
+                Lang::Kor => "ko",
+                Lang::Ara => "ar",
+                Lang::Hin => "hi",
+                Lang::Tur => "tr",
+                Lang::Pol => "pl",
+                Lang::Ukr => "uk",
+                Lang::Ces => "cs",
+                Lang::Ron => "ro",
+                Lang::Hun => "hu",
+                Lang::Ell => "el",
+                Lang::Swe => "sv",
+                Lang::Dan => "da",
+                Lang::Fin => "fi",
+                Lang::Nob => "no", // Norwegian Bokmål
+                _ => "default",
+            };
+
+            // Check confidence - only use detected language if confident enough
+            if info.is_reliable() {
+                if let Some(model) = self.models.get(lang_code) {
+                    println!(
+                        "[TTS] Detected language: {} (confidence: {:.0}%)",
+                        lang_code.to_uppercase(),
+                        info.confidence() * 100.0
+                    );
+                    return model;
+                }
+            } else {
+                println!("[TTS] Language detection failed");
+                println!("[TTS] Confidence: {:.0}%", info.confidence() * 100.0);
+            }
+        }
+
+        &self.default_model
     }
 }
 
@@ -164,11 +256,14 @@ impl Narrator {
             //    temp_audio.display()
             //);
 
+            // Select model based on detected language
+            let model_path = self.config.get_model_for_text(text);
+
             // Run Piper to generate WAV file
             // --length-scale: <1.0 = faster, >1.0 = slower (default 1.0)
             let piper_result = Command::new(&self.config.piper_path)
                 .arg("--model")
-                .arg(&self.config.model_path)
+                .arg(model_path)
                 .arg("--length-scale")
                 .arg(self.config.speed.to_string())
                 .arg("--output_file")
@@ -239,9 +334,13 @@ impl Narrator {
 
             let temp_audio = env::temp_dir().join("tts_output.wav");
 
+            let model_path = self.config.get_model_for_text(text);
+
             let mut piper = Command::new(&self.config.piper_path)
                 .arg("--model")
-                .arg(&self.config.model_path)
+                .arg(model_path)
+                .arg("--length-scale")
+                .arg(self.config.speed.to_string())
                 .arg("--output_file")
                 .arg(&temp_audio)
                 .stdin(Stdio::piped())

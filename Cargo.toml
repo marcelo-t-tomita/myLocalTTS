@@ -19,6 +19,8 @@ rubato = "0.14" # Resampling for Whisper (Whisper needs 16kHz)
 arboard = "3.3"
 # Keyboard simulation (Paste)
 enigo = "0.2"
+# Language detection
+whatlang = "0.16"
 # Whisper - using CLI (whisper-rs requires LLVM to build)
 
 [build-dependencies]

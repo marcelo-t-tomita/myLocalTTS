@@ -16,6 +16,9 @@ whisper-cublas*.zip
 whisper-cuda*.zip
 *.zip
 
+# Piper downloads and extracted folders (users must download their own)
+piper/
+
 # Whisper executables and DLLs (users must download their own)
 whisper-cli.exe
 whisper.exe
@@ -36,6 +39,9 @@ temp_*.wav
 temp_*.txt
 *.wav.txt
 *.tmp
+
+# Personal docs
+LEARN_RUST.md
 
 # IDE
 .idea/

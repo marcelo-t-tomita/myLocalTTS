@@ -210,12 +210,14 @@ fn get_selected_text() -> Result<String> {
     Ok(selected_text)
 }
 
-/// Truncate text for display purposes
-fn truncate_for_display(text: &str, max_len: usize) -> String {
+/// Truncate text for display purposes (UTF-8 safe)
+fn truncate_for_display(text: &str, max_chars: usize) -> String {
     let text = text.replace('\n', " ").replace('\r', "");
-    if text.len() <= max_len {
+    let char_count = text.chars().count();
+    if char_count <= max_chars {
         text
     } else {
-        format!("{}...", &text[..max_len])
+        let truncated: String = text.chars().take(max_chars).collect();
+        format!("{}...", truncated)
     }
 }
