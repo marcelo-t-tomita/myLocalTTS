@@ -49,8 +49,8 @@ impl Transcriber {
             .arg("-nt") // No timestamps in output
             .arg("-l")
             .arg("auto") // Auto-detect language
-            .arg("--prompt")
-            .arg("Multilingual transcription. Transcrição multilíngue. English and Portuguese text. Texto em inglês e português.")
+            // .arg("--prompt")
+            // .arg("Multilingual transcription. Transcrição multilíngue. English and Portuguese text. Texto em inglês e português.")
             .output()
             .map_err(|e| anyhow!("Failed to execute whisper process: {}", e))?;
 
@@ -67,12 +67,21 @@ impl Transcriber {
 
         let raw_output = String::from_utf8_lossy(&output.stdout).to_string();
 
-        // Cleanup common artifacts
+        // Cleanup common artifacts and Whisper hallucinations
         let clean_text = raw_output
             .trim()
             .replace("[BLANK_AUDIO]", "")
             .replace("[MÚSICA]", "")
             .replace("[MÚSICA DE FUNDO]", "")
+            // Whisper hallucinations (echoes of the initial prompt)
+            .replace("Multilingual transcription.", "")
+            .replace("Transcrição multilíngue.", "")
+            .replace("English and Portuguese text.", "")
+            .replace("Texto em inglês e português.", "")
+            .replace("Text in english.", "")
+            .replace("Text in English.", "")
+            .replace("Texto em inglês.", "")
+            .replace("Texto em português.", "")
             .trim()
             .to_string();
 
