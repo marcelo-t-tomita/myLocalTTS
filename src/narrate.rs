@@ -297,6 +297,8 @@ impl Narrator {
                     }
 
                     // Play the audio file using PowerShell (non-blocking)
+                    // Escape single quotes to prevent PowerShell command injection
+                    let safe_path = temp_audio.display().to_string().replace("'", "''");
                     let player = Command::new("powershell")
                         .args([
                             "-NoProfile",
@@ -305,7 +307,7 @@ impl Narrator {
                             "-Command",
                             &format!(
                                 "(New-Object Media.SoundPlayer '{}').PlaySync()",
-                                temp_audio.display()
+                                safe_path
                             ),
                         ])
                         .creation_flags(0x08000000) // CREATE_NO_WINDOW
